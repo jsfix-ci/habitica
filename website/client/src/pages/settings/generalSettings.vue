@@ -17,6 +17,9 @@
         <user-name-setting />
         <user-email-setting />
         <display-name-setting />
+        <password-setting />
+        <reset-account />
+        <delete-account />
         <tr>
           <td colspan="3"></td>
         </tr>
@@ -54,13 +57,24 @@ import notificationsMixin from '../../mixins/notifications';
 import UserNameSetting from '@/pages/settings/inlineSettings/userNameSetting';
 import UserEmailSetting from '@/pages/settings/inlineSettings/userEmailSetting';
 import DisplayNameSetting from '@/pages/settings/inlineSettings/displayNameSetting';
+import PasswordSetting from '@/pages/settings/inlineSettings/passwordSetting';
+import ResetAccount from '@/pages/settings/inlineSettings/resetAccount';
+import DeleteAccount from '@/pages/settings/inlineSettings/deleteAccount';
+import { sharedInlineSettingStore } from '@/pages/settings/inlineSettings/inlineSettingMixin';
 
 export default {
   components: {
+    DeleteAccount,
+    ResetAccount,
+    PasswordSetting,
     DisplayNameSetting,
     UserEmailSetting,
     UserNameSetting,
   },
   mixins: [notificationsMixin],
+  beforeRouteLeave (_, __, next) {
+    sharedInlineSettingStore.markAsClosed();
+    next();
+  },
 };
 </script>

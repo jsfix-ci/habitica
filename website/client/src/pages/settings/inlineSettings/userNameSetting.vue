@@ -1,7 +1,7 @@
 <template>
   <fragment>
     <tr
-      v-if="!show"
+      v-if="!modalVisible"
     >
       <td class="settings-label">
         {{ $t("username") }}
@@ -12,14 +12,14 @@
       <td class="settings-button">
         <a
           class="edit-link"
-          @click.prevent="show = true"
+          @click.prevent="openModal()"
         >
           {{ $t(user?.auth?.local?.username ? 'edit' : 'add') }}
         </a>
       </td>
     </tr>
     <tr
-      v-if="show"
+      v-if="modalVisible"
       class="expanded"
     >
       <td colspan="3">
@@ -52,6 +52,7 @@
                 type="text"
                 :placeholder="$t('newUsername')"
                 :class="{ 'is-invalid input-invalid': !usernameValid }"
+                @keyup="inputChanged = true"
                 @blur="restoreEmptyUsername()"
               >
               <div class="input-floating-checkmark">
@@ -74,7 +75,7 @@
           <save-cancel-buttons
             :disable-save="usernameCannotSubmit"
             @saveClicked="changeUser('username', cleanedInputValue)"
-            @cancelClicked="resetAndClose()"
+            @cancelClicked="closeModal()"
           />
         </div>
       </td>
@@ -136,15 +137,18 @@ import debounce from 'lodash/debounce';
 import { mapState } from '@/libs/store';
 
 import checkIcon from '@/assets/svg/check.svg';
-import { _InlineSettingMixin } from './_inlineSettingMixin';
+import { InlineSettingMixin } from './inlineSettingMixin';
 import SaveCancelButtons from '@/pages/settings/inlineSettings/_saveCancelButtons';
+
+// TODO extract usernameIssues/checks to a mixin to share between this and the authForm
 
 export default {
   components: { SaveCancelButtons },
-  mixins: [_InlineSettingMixin],
+  mixins: [InlineSettingMixin],
   data () {
     return {
       inputValue: '',
+      inputChanged: false,
       usernameIssues: [],
       icons: Object.freeze({
         checkIcon,
@@ -170,7 +174,7 @@ export default {
       if (this.cleanedInputValue.length <= 1) {
         return true;
       }
-      return !this.usernameValid;
+      return !this.usernameValid || !this.inputChanged;
     },
   },
   watch: {

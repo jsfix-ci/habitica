@@ -1,7 +1,7 @@
 <template>
   <fragment>
     <tr
-      v-if="!show"
+      v-if="!modalVisible"
     >
       <td class="settings-label">
         {{ $t("displayName") }}
@@ -12,14 +12,14 @@
       <td class="settings-button">
         <a
           class="edit-link"
-          @click.prevent="show = true"
+          @click.prevent="openModal()"
         >
           {{ $t('edit') }}
         </a>
       </td>
     </tr>
     <tr
-      v-if="show"
+      v-if="modalVisible"
       class="expanded"
     >
       <td colspan="3">
@@ -53,6 +53,7 @@
                 type="text"
                 :placeholder="$t('newDisplayName')"
                 :class="{'is-invalid input-invalid': displayNameInvalid}"
+                @keyup="inputChanged = true"
               >
               <div
                 v-if="displayNameIssues.length > 0"
@@ -72,7 +73,7 @@
           <save-cancel-buttons
             :disable-save="displayNameCannotSubmit"
             @saveClicked="changeDisplayName(temporaryDisplayName)"
-            @cancelClicked="resetAndClose()"
+            @cancelClicked="closeModal()"
           />
         </div>
       </td>
@@ -136,16 +137,15 @@ import { mapState } from '@/libs/store';
 
 import checkIcon from '@/assets/svg/check.svg';
 import SaveCancelButtons from '@/pages/settings/inlineSettings/_saveCancelButtons';
-import { _InlineSettingMixin } from '@/pages/settings/inlineSettings/_inlineSettingMixin';
+import { InlineSettingMixin } from '@/pages/settings/inlineSettings/inlineSettingMixin';
 
 export default {
   components: { SaveCancelButtons },
-  mixins: [_InlineSettingMixin],
+  mixins: [InlineSettingMixin],
   data () {
     return {
-      show: false,
-
       temporaryDisplayName: '',
+      inputChanged: false,
       displayNameIssues: [],
       updates: {
         newEmail: '',
@@ -167,25 +167,20 @@ export default {
       return !this.validEmail || this.updates.password.length === 0;
     },
     displayNameInvalid () {
-      if (this.temporaryDisplayName.length <= 1) return false;
-      return !this.displayNameValid;
-    },
-    displayNameValid () {
-      if (this.temporaryDisplayName.length <= 1) return false;
-      return this.displayNameIssues.length === 0;
+      if (this.temporaryDisplayName.length <= 1) {
+        return false;
+      }
+
+      return true;
     },
     displayNameCannotSubmit () {
-      if (this.temporaryDisplayName.length <= 1) return true;
-      return !this.displayNameValid;
+      return this.displayNameInvalid || !this.inputChanged;
     },
   },
   mounted () {
     this.restoreDisplayName();
   },
   methods: {
-    resetAndClose () {
-      this.show = false;
-    },
     restoreDisplayName () {
       if (this.temporaryDisplayName.length < 1) {
         this.temporaryDisplayName = this.user.profile.name;
